@@ -1,0 +1,26 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: ["master"]
+  pull_request:
+    branches: ["master"]
+  # lehetővé teszi, hogy kézzel elindítsd a folyamatot
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate image tag
+        run: echo "IMAGE_TAG=$(date +%s)" >> $GITHUB_ENV
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build, Login and Push Docker Image to GHCR
+        run: |
+          docker build . --file Dockerfile --tag ghcr.io/janko-julianna/cicd-teszt:${IMAGE_TAG}
+          echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u bognarpal --password-stdin
+          docker push ghcr.io/janko-julianna/cicd-teszt:${IMAGE_TAG}
